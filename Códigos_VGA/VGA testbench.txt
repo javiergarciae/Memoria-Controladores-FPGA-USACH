@@ -1,0 +1,95 @@
+`timescale 1ns / 1ps
+
+module vga_tb();
+
+    // Señales para conectar al módulo
+    logic clk;
+    logic reset;
+    logic [8:1] sw;
+    logic [3:0] vga_r, vga_g, vga_b;
+    logic vga_hs, vga_vs;
+
+    // Instancia del módulo VGA (DUT - Device Under Test)
+    vga dut (
+        .clk(clk),
+        .reset(reset),
+        .sw(sw),
+        .vga_r(vga_r),
+        .vga_g(vga_g),
+        .vga_b(vga_b),
+        .vga_hs(vga_hs),
+        .vga_vs(vga_vs)
+    );
+
+    // Generación del reloj de 100MHz (Periodo de 10ns)
+    always #5 clk = ~clk;
+
+    initial begin
+        // Configuración inicial
+        clk = 0;
+        reset = 1;
+        sw = 8'b00000000;
+
+        // Liberar reset después de 100ns
+        #100;
+        reset = 0;
+        $display("Simulacion Iniciada - Reset Desactivado");
+        #5000
+
+        // --- PRUEBA 1: SW1 - Todo Blanco ---
+        #100;
+        sw = 8'b00000001; 
+        $display("Patron: Todo Blanco (SW1)");
+        #50000; // Esperar unos ciclos para ver el color en la onda
+
+
+        // --- PRUEBA 2: SW2 - Todo rojo ---
+        #100;
+        sw = 8'b00000010; 
+        $display("Patron: Todo rojo (SW2)");
+        #50000; // Esperar unos ciclos para ver el color en la onda
+
+
+        // --- PRUEBA 3: SW3 - Todo azul ---
+        #100;
+        sw = 8'b00000100; 
+        $display("Patron: Todo azul (SW3)");
+        #50000; // Esperar unos ciclos para ver el color en la onda
+
+
+        // --- PRUEBA 4: SW4 - Barras Verticales ---
+        // Veremos como cambian R, G y B a medida que h_cnt aumenta
+        sw = 8'b00001000;
+        $display("Patron: Barras Verticales (SW4)");
+        #50000; // Esperamos suficiente tiempo para recorrer parte de una linea
+        
+        
+        // --- PRUEBA 5: SW5 - Barras horizontales ---
+        // Veremos como cambian R, G y B a medida que h_cnt aumenta
+        sw = 8'b00010000;
+        $display("Patron: Barras horizontales (SW5)");
+        #50000; // Esperamos suficiente tiempo para recorrer parte de una linea
+        
+        // --- PRUEBA 6: SW6 - Todo Verde ---
+        // Veremos como cambian R, G y B a medida que h_cnt aumenta
+        sw = 8'b00100000;
+        $display("Patron: Todo Verde (SW6)");
+        #50000; // Esperamos suficiente tiempo para recorrer parte de una linea
+
+        // --- PRUEBA 7: SW7 - Bandera de Chile ---
+        // Veremos la combinacion de Azul en los primeros pixeles
+        sw = 8'b01000000;
+        $display("Patron: Bandera de Chile (SW7)");
+        #50000;
+
+        // --- PRUEBA 8: SW8 - Tablero de Ajedrez ---
+        sw = 8'b10000000;
+        $display("Patron: Tablero de Ajedrez (SW8)");
+        #20000;
+
+        // Finalizar simulación
+        $display("Fin de la simulacion");
+        $finish;
+    end
+
+endmodule

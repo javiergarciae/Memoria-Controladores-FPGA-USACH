@@ -1,0 +1,146 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+entity vga is
+    Port ( 
+        vga_r  : out std_logic_vector(3 downto 0);
+        vga_g  : out std_logic_vector(3 downto 0);
+        vga_b  : out std_logic_vector(3 downto 0);
+        vga_hs : out std_logic;
+        vga_vs : out std_logic;
+        clk    : in  std_logic;
+        reset  : in  std_logic;
+        sw     : in  std_logic_vector(8 downto 1) -- SW1 a SW8
+    );
+end vga;
+
+architecture Behavioral of vga is
+    signal pix_clock : std_logic := '0';
+    signal clk_2     : std_logic := '0';
+    signal h_cnt     : integer range 0 to 799 := 0;
+    signal v_cnt     : integer range 0 to 524 := 0;
+
+    -- Señales para la lógica de la estrella
+    signal is_star : boolean;
+    
+begin
+
+    -- Divisor de reloj para 25MHz
+    process(clk, reset)
+    begin
+        if reset = '1' then 
+            clk_2 <= '0';
+        elsif rising_edge(clk) then 
+            clk_2 <= not clk_2;
+        end if; 
+    end process;
+
+    process(clk_2, reset)
+    begin 
+        if reset = '1' then 
+            pix_clock <= '0';
+        elsif rising_edge(clk_2) then
+            pix_clock <= not pix_clock;
+        end if;
+    end process;
+
+    -- Sincronismo VGA 640x480 @ 60Hz
+    vga_hs <= '0' when (h_cnt >= 656 and h_cnt < 752) else '1';
+    vga_vs <= '0' when (v_cnt >= 490 and v_cnt < 492) else '1';
+
+    -- LÓGICA DE LA ESTRELLA MEJORADA (Ecuaciones de 5 puntas)
+    -- Centrada en (120, 120) dentro del cuadro azul de 240x240
+    process(h_cnt, v_cnt)
+        variable x, y : integer;
+    begin
+        x := h_cnt - 120; 
+        y := v_cnt - 120;
+        -- Ecuaciones de las 5 líneas que forman el pentagrama
+        -- Estas inecuaciones definen los bordes afilados de la estrella de Chile
+        if (
+            ((y*100 - x*72  < 4000)  and (y*100 + x*72  < 4000)  and (y > -75)) and -- Cabeza y centro
+            ((y*10  - x*30  < 180)   or (y*10  + x*30  < 180))   and                -- Brazos laterales
+            ((y*10  - x*15  > -1100) and (y*10  + x*15  > -1100))                   -- Piernas inferiores
+        ) then
+            is_star <= true;
+        else
+            is_star <= false;
+        end if;
+    end process;
+
+    -- PROCESO PRINCIPAL DE VIDEO
+    process(pix_clock, reset) 
+    begin
+        if (reset = '1') then
+            h_cnt <= 0; v_cnt <= 0;
+        elsif rising_edge(pix_clock) then
+             
+            -- Color por defecto: Negro
+            vga_r <= X"0"; vga_g <= X"0"; vga_b <= X"0";
+
+            if (h_cnt < 640 and v_cnt < 480) then
+                
+                -- SELECTOR DE PATRONES (Prioridad de SW8 a SW1)
+                
+                if (sw(8) = '1') then         -- SW8: TABLERO DE AJEDREZ
+                    -- Cuadros de 64x64 píxeles (usando el bit 6 del contador)
+                    if ( (h_cnt/64) mod 2 = (v_cnt/64) mod 2 ) then
+                        vga_r <= X"F"; vga_g <= X"F"; vga_b <= X"F"; -- Blanco
+                    else
+                        vga_r <= X"0"; vga_g <= X"0"; vga_b <= X"0"; -- Negro
+                    end if;
+
+                elsif (sw(7) = '1') then      -- SW7: BANDERA CHILENA MEJORADA
+                    if (v_cnt >= 240) then    -- Mitad inferior: Rojo
+                        vga_r <= X"F"; vga_g <= X"0"; vga_b <= X"0";
+                    elsif (h_cnt < 240) then  -- Cuadro azul
+                        if is_star then
+                            vga_r <= X"F"; vga_g <= X"F"; vga_b <= X"F"; -- Estrella Blanca
+                        else
+                            vga_r <= X"0"; vga_g <= X"0"; vga_b <= X"F"; -- Fondo Azul
+                        end if;
+                    else                      -- Franja superior: Blanca
+                        vga_r <= X"F"; vga_g <= X"F"; vga_b <= X"F";
+                    end if;
+
+                elsif (sw(6) = '1') then      -- SW6: Verde Completo
+                    vga_g <= X"F";
+
+                elsif (sw(5) = '1') then      -- SW5: Barras Horizontales RGB
+                    if (v_cnt < 160) then vga_r <= X"F";
+                    elsif (v_cnt < 320) then vga_g <= X"F";
+                    else vga_b <= X"F"; end if;
+
+                elsif (sw(4) = '1') then      -- SW4: Barras Verticales RGB
+                    if (h_cnt < 213) then vga_r <= X"F";
+                    elsif (h_cnt < 426) then vga_g <= X"F";
+                    else vga_b <= X"F"; end if;
+
+                elsif (sw(3) = '1') then      -- SW3: Azul
+                    vga_b <= X"F";
+
+                elsif (sw(2) = '1') then      -- SW2: Rojo
+                    vga_r <= X"F";
+
+                elsif (sw(1) = '1') then      -- SW1: Blanco
+                    vga_r <= X"F"; vga_g <= X"F"; vga_b <= X"F";
+                end if;
+
+            end if;
+            
+            -- Lógica de contadores
+            if (h_cnt < 799) then
+                h_cnt <= h_cnt + 1;
+            else 
+                h_cnt <= 0;
+                if (v_cnt < 524) then 
+                    v_cnt <= v_cnt + 1;
+                else 
+                    v_cnt <= 0;
+                end if;
+            end if;
+        end if;
+    end process;
+    
+end Behavioral;
