@@ -9,8 +9,7 @@ module Servo_switch(
     logic [17:0] cnt_angle;
     logic [20:0] ctr = 0;
 
-    // Lógica para 4 ángulos usando los switches individualmente
-    // Prioridad: El switch más alto manda
+
     always_comb begin
         if      (switch[3]) cnt_angle = 18'd200000; // 2.0ms (180°)
         else if (switch[2]) cnt_angle = 18'd166666; // 1.66ms (120°)
@@ -19,7 +18,7 @@ module Servo_switch(
         else                cnt_angle = 18'd150000; // Default: 1.5ms (90°)
     end
     
-    // Contador de periodo de 20ms (2,000,000 ciclos)
+
     always_ff @(posedge clk) begin
         if(ctr < 2000000)
             ctr <= ctr + 1'b1;
@@ -27,7 +26,7 @@ module Servo_switch(
             ctr <= '0;
     end
 
-    // Comparador PWM
+
     assign pwm_signal = (ctr <= cnt_angle) ? 1'b1 : 1'b0;
 
 endmodule
