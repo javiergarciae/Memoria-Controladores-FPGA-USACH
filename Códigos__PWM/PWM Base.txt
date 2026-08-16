@@ -1,0 +1,33 @@
+`timescale 1ns / 1ps
+
+module Servo_switch(
+    input  logic       clk,         // Reloj 100MHz
+    input  logic [3:0] switch,      // Ahora usamos 4 switches
+    output logic       pwm_signal   // Salida PWM (M14)
+);
+
+    logic [17:0] cnt_angle;
+    logic [20:0] ctr = 0;
+
+    // Lógica para 4 ángulos usando los switches individualmente
+    // Prioridad: El switch más alto manda
+    always_comb begin
+        if      (switch[3]) cnt_angle = 18'd200000; // 2.0ms (180°)
+        else if (switch[2]) cnt_angle = 18'd166666; // 1.66ms (120°)
+        else if (switch[1]) cnt_angle = 18'd133333; // 1.33ms (60°)
+        else if (switch[0]) cnt_angle = 18'd100000; // 1.0ms (0°)
+        else                cnt_angle = 18'd150000; // Default: 1.5ms (90°)
+    end
+    
+    // Contador de periodo de 20ms (2,000,000 ciclos)
+    always_ff @(posedge clk) begin
+        if(ctr < 2000000)
+            ctr <= ctr + 1'b1;
+        else
+            ctr <= '0;
+    end
+
+    // Comparador PWM
+    assign pwm_signal = (ctr <= cnt_angle) ? 1'b1 : 1'b0;
+
+endmodule

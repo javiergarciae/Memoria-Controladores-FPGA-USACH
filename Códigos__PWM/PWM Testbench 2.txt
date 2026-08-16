@@ -1,0 +1,64 @@
+`timescale 1ns / 1ps
+
+module Servo_switch_tb();
+
+    // Señales de prueba
+    logic clk;
+    logic [3:0] switch;
+    logic pwm_signal;
+
+    // Instancia del módulo a probar (UUT)
+    Servo_switch uut (
+        .clk(clk),
+        .switch(switch),
+        .pwm_signal(pwm_signal)
+    );
+
+    // Generador de reloj (100MHz = Periodo de 10ns)
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk; // Cambia cada 5ns para ciclo de 10ns
+    end
+
+    // Proceso de estímulos
+    initial begin
+        // Inicialización
+        switch = 4'b0000;
+        $display("Iniciando Simulación...");
+        
+        // Esperamos 0.1ms para estabilizar
+        #50;
+
+        // Probar Switch 0 (Esperar un ciclo PWM de 20ms)
+        $display("Probando SW0 (0 grados)...");
+        switch = 4'b0001; 
+        #210; // Esperamos poco más de 20ms
+
+
+        // Probar Switch 1 (Esperar un ciclo PWM de 20ms)
+        $display("Probando SW1 (Posicion: 60 grados)...");
+        switch = 4'b0010;
+        #210000000;
+        
+        // Probar Switch 2 (Esperar un ciclo PWM de 20ms)
+        $display("Probando SW2 (Posicion: 120 grados)...");
+        switch = 4'b0100;
+        #210000000;
+        
+        // Probar Switch 3 (Esperar un ciclo PWM de 20ms)
+        $display("Probando SW3 (Posicion: 180 grados)...");
+        switch = 4'b1000;
+        #210000000;
+
+        $display("Simulación terminada.");
+        $finish;
+    end
+
+    // Monitor en consola para ver el ancho del pulso
+    realtime start_time;
+    always @(posedge pwm_signal) start_time = $realtime;
+    always @(negedge pwm_signal) begin
+        $display("Ancho de pulso detectado: %t", $realtime - start_time);
+    end
+
+endmodule

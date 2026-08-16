@@ -1,0 +1,15 @@
+## Reloj Maestro 100 MHz
+set_property -dict {PACKAGE_PIN F14 IOSTANDARD LVCMOS33} [get_ports clk]
+
+## Switches (SW0, SW1, SW2, SW3)
+set_property -dict {PACKAGE_PIN V2 IOSTANDARD LVCMOS33} [get_ports {switch[0]}]
+set_property -dict {PACKAGE_PIN U2 IOSTANDARD LVCMOS33} [get_ports {switch[1]}]
+set_property -dict {PACKAGE_PIN U1 IOSTANDARD LVCMOS33} [get_ports {switch[2]}]
+set_property -dict {PACKAGE_PIN T2 IOSTANDARD LVCMOS33} [get_ports {switch[3]}]
+
+## Salida PWM - Pin M14 (Conector SERVO0 según tu placa)
+set_property -dict {PACKAGE_PIN M14 IOSTANDARD LVCMOS33} [get_ports pwm_signal]
+
+## Configuración de voltajes
+set_property CFGBVS VCCO [current_design]
+set_property CONFIG_VOLTAGE 3.3 [current_design]
