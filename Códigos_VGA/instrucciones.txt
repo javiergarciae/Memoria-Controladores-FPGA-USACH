@@ -1,1 +1,6 @@
+La presente carpeta contiene 3 archivos destinados a las simulaciones y pruebas en hardware de la actividad asociada a controlador VGA mediante tarjeta de desarrollo Nexys-A7.
 
+
+El archivo VGA Base corresponde al texto que de sebe añadir a la ventana principal dentro del software Vivado 2025-2, en el se determina el flujo de trabajo principal asociado a la actividad.
+El archivo VGA Constrains corresponde al texto que de sebe añadir como archivo de constrains dentro del software, este detalla el Interconexionado interno de el chip con los periféricos y terminales físicos de la tarjeta.
+El archivo VGA Testbench corresponde al texto que de sebe añadir al archivo para realizar bancos de pruebas dentro del software, detallando así que las simulaciones se cumplan de forma exitosa entes de realizar la implementación de hardware.
